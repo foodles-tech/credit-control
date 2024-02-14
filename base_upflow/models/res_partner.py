@@ -80,11 +80,17 @@ class Partner(models.Model):
         )
         return payload
 
+    def _get_firstname(self):
+        firstname = ""
+        if self.name:
+            firstname = " ".join(self.name.split())
+        return firstname
+
     def get_upflow_api_post_contacts_payload(self):
         payload = self.prepare_base_payload()
         payload.update(
             {
-                "firstName": self.name,
+                "firstName": self._get_firstname(),
                 # "lastName": "",
                 "phone": self.mobile or "",
                 "email": self.email,
