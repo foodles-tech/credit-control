@@ -326,6 +326,16 @@ msgid ""
 msgstr ""
 
 #. module: edi_upflow
+#: code:addons/edi_upflow/models/account_partial_reconcile.py:0
+#, python-format
+msgid ""
+"This job has been canceled and its associated EDI exchange was deleted "
+"because the associated reconciliation was deleted"
+msgstr ""
+"Cette tâche a été annulée et l'échange EDI associé a été supprimé car la "
+"réconciliation associée a été supprimée"
+
+#. module: edi_upflow
 #: model:ir.model.fields,field_description:edi_upflow.field_account_partial_reconcile__message_unread
 msgid "Unread Messages"
 msgstr "Messages non lus"

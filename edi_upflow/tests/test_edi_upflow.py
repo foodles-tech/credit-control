@@ -1993,6 +1993,42 @@ class TestEdiUpflowReconcileOperation(EDIUpflowCommonCase):
         )
         self.assertTrue(exchange_record.record.sent_to_upflow)
 
+    def test_unlink_reconcile_delete_exchanges_and_cancel_jobs(self):
+        self._register_manual_payment_reconciled(self.invoice)
+
+        exchange_record = self.env["edi.exchange.record"].search([
+            ("model", "=", "account.partial.reconcile"),
+            (
+                "type_id",
+                "=",
+                self.env.ref("edi_upflow.upflow_edi_exchange_type_post_reconcile").id,
+            ),
+        ])
+        self.assertEqual(len(exchange_record), 1)
+        self.assertEqual(exchange_record.edi_exchange_state, "new")
+        queue_job = self.env["queue.job"].search([
+            ("job_function_id.channel_id", "=",
+             self.env.ref("edi_oca.channel_edi_exchange").id),
+            ("func_string", "like", str(exchange_record)),
+        ])
+        self.assertEqual(len(queue_job), 1)
+        self.assertEqual(queue_job.state, "pending")
+
+        with (
+            mock.patch("odoo.addons.mail.models.mail_thread.MailThread.message_post")
+        ) as mock_message_post:
+            exchange_record.record.unlink()
+
+        self.assertFalse(exchange_record.exists())
+        self.assertEqual(queue_job.state, "cancelled")
+        mock_message_post.assert_called_once_with(
+            body="This job has been canceled and its associated EDI exchange was deleted "
+                 "because the associated reconciliation was deleted",
+            message_type="comment",
+            subtype_xmlid="mail.mt_note",
+            author_id=self.env.ref("base.partner_root").id
+        )
+
 
 @tagged("post_install", "-at_install")
 class TestEDIUpflowCustomersContacts(EDIUpflowCommonCase):
